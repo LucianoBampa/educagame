@@ -47,4 +47,7 @@ desktop.ini
 # ── Pytest / Coverage ─────────────────────────────────────────────────────────
 .pytest_cache/
 .coverage
-htmlcov/
+htmlcov/"*.exe" 
+"*.spec" 
+"build/" 
+"dist/" 
