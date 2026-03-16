@@ -1,0 +1,50 @@
+# ── Ambientes virtuais ────────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Bancos de dados ───────────────────────────────────────────────────────────
+*.db
+*.sqlite3
+*.sqlite3-journal
+
+# ── Variáveis de ambiente ─────────────────────────────────────────────────────
+.env
+.envrc
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Relatórios gerados pelos jogos ────────────────────────────────────────────
+relatorios/
+
+# ── Arquivos temporários ──────────────────────────────────────────────────────
+*.tmp
+*.log
+limpar_banco.py
+verificar_banco.py
+verificar.py
+_finalizar_sessao.py
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+# ── Sistema operacional ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Pytest / Coverage ─────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Educagame - Mata Mosquito</title>
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+	<link rel="stylesheet" href="estilo.css" />
+
+	<script>
+
+		document.addEventListener("DOMContentLoaded", function () {
+
+			document.getElementById("ra").addEventListener("input", function () {
+				this.value = this.value.replace(/[^0-9]/g, '')
+			})
+
+			document.getElementById("turma").addEventListener("input", function () {
+				this.value = this.value.toUpperCase()
+			})
+
+		})
+
+		function iniciarJogo() {
+
+			// CORREÇÃO AQUI
+			var aluno = document.getElementById('aluno').value.toUpperCase().trim()
+
+			var ra = document.getElementById('ra').value.trim()
+
+			if (!/^[0-9]+$/.test(ra)) {
+
+				alert("RA deve conter apenas números")
+				return false
+
+			}
+
+			var turma = document.getElementById('turma').value.toUpperCase().trim()
+
+			var regexTurma = /^[0-9][A-Z]$/
+
+			if (!regexTurma.test(turma)) {
+
+				alert("Turma deve ser no formato: 1A, 2B, 3C...")
+				return false
+
+			}
+
+			var nivel = document.getElementById('nivel').value
+
+			if (aluno.length < 3 || ra === '' || turma === '') {
+
+				alert('Informe o nome, RA e turma do aluno')
+				return false
+
+			}
+
+			if (nivel === '') {
+
+				alert('Selecione um nível para iniciar o jogo')
+				return false
+
+			}
+
+			// CORREÇÃO PADRONIZAÇÃO
+			localStorage.setItem("nome", aluno)
+			localStorage.setItem("ra", ra)
+			localStorage.setItem("turma", turma)
+
+			document.getElementById("btnIniciar").disabled = true
+
+			window.location.href = "app.html?" + nivel
+
+		}
+
+	</script>
+
+</head>
+
+<body>
+
+	<div class="container">
+
+		<div class="row">
+			<div class="col">
+				<div class="d-flex justify-content-center">
+					<img src="imagens/game.png" width="320">
+				</div>
+			</div>
+		</div>
+
+		<br>
+
+		<div class="row">
+			<div class="col">
+
+				<div class="d-flex justify-content-center">
+
+					<div class="mb-2">
+
+						<input type="text" class="form-control form-control-sm" id="aluno" placeholder="Nome do aluno"
+							maxlength="45" style="text-transform:uppercase">
+
+						<br>
+
+						<input type="text" class="form-control form-control-sm" id="ra" placeholder="RA do aluno"
+							maxlength="10" inputmode="numeric">
+
+						<br>
+
+						<input type="text" class="form-control form-control-sm" id="turma" placeholder="Turma do aluno"
+							maxlength="2" style="text-transform:uppercase">
+						<br>
+
+						<select class="form-control form-control-sm" id="nivel">
+							<option value="">-- Selecione o nível --</option>
+							<option value="facil">Fácil</option>
+							<option value="normal">Normal</option>
+							<option value="dificil">Difícil</option>
+							<option value="muito_dificil">Muito Difícil</option>
+						</select>
+
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col">
+				<div class="d-flex justify-content-center">
+					<button id="btnIniciar" type="button" class="btn btn-danger" onclick="iniciarJogo()">
+
+						Iniciar Jogo
+
+					</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</body>
+
+</html>
