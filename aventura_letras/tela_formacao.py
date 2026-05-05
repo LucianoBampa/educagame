@@ -134,11 +134,11 @@ class TelaFormacao:
 
         # Instruções
         if not self.correto:
-            texto_inst = fonte_pequena.render("BACKSPACE: apagar  |  ENTER: verificar", True, BRANCO)
+            texto_inst = fonte_pequena.render("BACKSPACE: apagar  |  ENTER: verificar", True, COR_LETRA)
             rect_inst = texto_inst.get_rect(center=(LARGURA // 2, 540))
             tela.blit(texto_inst, rect_inst)
         else:
-            texto_inst = fonte_pequena.render("Pressione ENTER para continuar.", True, BRANCO)
+            texto_inst = fonte_pequena.render("Pressione ENTER para continuar.", True, COR_LETRA)
             rect_inst = texto_inst.get_rect(center=(LARGURA // 2, 540))
             if pygame.time.get_ticks() % 1000 < 500:
                 tela.blit(texto_inst, rect_inst)

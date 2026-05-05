@@ -1,37 +1,28 @@
 import pygame
 import random
 import threading
-import pyttsx3
 import sys
 import json
 import os
 import tempfile
 import config
 import interface
+import io
+from gtts import gTTS
+
 from relatorio import enviar_sessao
 
 # ---------------------------------------------------------------------------
 # Inicialização
 # ---------------------------------------------------------------------------
 pygame.init()
+pygame.mixer.init()
 pygame.key.set_repeat(300, 50)
 info_monitor    = pygame.display.Info()
 largura_inicial = info_monitor.current_w
 altura_inicial  = info_monitor.current_h - 50
 tela = pygame.display.set_mode((largura_inicial, altura_inicial), pygame.RESIZABLE)
 pygame.display.set_caption(config.TITULO)
-
-# ---------------------------------------------------------------------------
-# Voz
-# ---------------------------------------------------------------------------
-VOZ_ID_BRASILEIRA = None
-temp_engine = pyttsx3.init()
-vozes = list(temp_engine.getProperty('voices') or [])  # type: ignore
-for voz in vozes:
-    if "brazil" in voz.name.lower() or "pt-br" in voz.id.lower():
-        VOZ_ID_BRASILEIRA = voz.id
-        break
-del temp_engine
 
 # ---------------------------------------------------------------------------
 # Fontes
@@ -44,9 +35,29 @@ fonte_pequena = pygame.font.Font(None, config.TAM_PEQUENO)
 # Palavras
 # ---------------------------------------------------------------------------
 LISTAS_PALAVRAS = {
-    "FACIL":   ["GATO", "CASA", "BOLA", "SAPO", "MESA", "FOGO", "SOFA", "LAGO", "GELO", "PATO"],
-    "MEDIO":   ["CADERNO", "ESCOLA", "BRINCAR", "JARDIM", "QUEIJO", "FOGUETE", "PIRULITO", "ABACAXI", "PROVA", "ESTRADA"],
-    "DIFICIL": ["AQUIFERO", "PROGRAMACAO", "CHOCOLATE", "ASTRONAUTA", "PARALELEPIPEDO", "HIPOPOTAMO", "XICARA", "HIDROXIDO", "BIBLIOTECA", "ALCACHOFRA"],
+    "FACIL":   ["casa", "bola", "gato", "sapo", "pato", "mala", "mesa", "vaso", "livro", "dedo",
+    "dado", "faca", "folha", "linha", "peixe", "milho", "cana", "bota", "capa", "pano",
+    "cola", "sola", "vela", "rua", "lua", "rio", "tia", "pai", "mãe", "avo", "tio",
+    "bebê", "boneca", "carro", "moto", "roda", "porta", "janela", "sala", "cama",
+    "copo", "prato", "fogo", "gelo", "sol", "chuva", "estrela", "nuvem", "vento"],
+    
+    "MEDIO":   ["escola", "aluno", "professora", "caderno", "atividade", "leitura", "escrita",
+    "história", "ciência", "natureza", "cidade", "bairro", "família", "amigo",
+    "amizade", "respeito", "cuidado", "alimento", "saúde", "higiene", "esporte",
+    "brincadeira", "parque", "jardim", "animal", "planta", "flor", "árvore",
+    "fruto", "água", "energia", "trabalho", "profissão", "mercado", "transporte",
+    "viagem", "estrada", "mapa", "cultura", "música", "arte", "pintura", "desenho",
+    "número", "cálculo", "soma", "subtração", "problema", "resposta"],
+
+    "DIFICIL": ["aprendizagem", "conhecimento", "educação", "responsabilidade", "organização",
+    "planejamento", "disciplina", "colaboração", "respeito", "cidadania",
+    "diversidade", "sustentabilidade", "preservação", "ambiente", "tecnologia",
+    "comunicação", "informação", "pesquisa", "investigação", "experimento",
+    "observação", "análise", "interpretação", "argumento", "opinião", "narrativa",
+    "descrição", "explicação", "geografia", "matemática", "literatura",
+    "vocabulário", "ortografia", "parágrafo", "texto", "leitura", "escrita",
+    "revisão", "exercício", "problema", "solução", "raciocínio", "estratégia",
+    "autonomia", "criatividade", "curiosidade", "reflexão"],
 }
 
 lista_atual        = []
@@ -56,28 +67,26 @@ falando_agora      = False
 # ---------------------------------------------------------------------------
 # Voz
 # ---------------------------------------------------------------------------
-def executar_fala(texto):
-    global falando_agora
-    try:
-        falando_agora = True
-        tts = pyttsx3.init()
-        if VOZ_ID_BRASILEIRA:
-            tts.setProperty('voice', VOZ_ID_BRASILEIRA)
-        tts.setProperty('rate', 150)
-        tts.say(texto)
-        tts.runAndWait()
-    except:
-        pass
-    finally:
-        falando_agora = False
-
-def falar_palavra(palavra):
-    if falando_agora: return
-    threading.Thread(target=executar_fala, args=(f"A palavra é: {palavra}",), daemon=True).start()
 
 def falar_texto_livre(texto):
-    if falando_agora: return
-    threading.Thread(target=executar_fala, args=(texto,), daemon=True).start()
+    """Gera o áudio com o Google e toca sem travar o jogo"""
+    try:
+        # Cria o áudio em português do Brasil
+        tts = gTTS(text=texto, lang='pt', tld='com.br')
+        
+        # Salva o áudio na memória RAM (muito rápido, não cria arquivo no PC)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        
+        # O Pygame toca a música de fundo perfeitamente
+        pygame.mixer.music.load(fp)
+        pygame.mixer.music.play()
+    except Exception as e:
+        print(f"[ERRO DE ÁUDIO] Verifique a conexão com a internet: {e}")
+
+def falar_palavra(palavra):
+    falar_texto_livre(f"A palavra é: {palavra}")
 
 # ---------------------------------------------------------------------------
 # Helpers de jogo
@@ -85,8 +94,8 @@ def falar_texto_livre(texto):
 def novo_jogo():
     if not palavras_pendentes:
         return None, 0, ""
-    palavra = random.choice(palavras_pendentes)
-    palavras_pendentes.remove(palavra)
+    palavra = random.choice(palavras_pendentes).upper()
+    palavras_pendentes.remove(palavra.lower())
     return palavra, 0, ""
 
 def reiniciar_tudo():
@@ -190,7 +199,7 @@ def main():
                         elif campo_ativo == "NOME":  campo_ativo = "TURMA"
                         else:                        campo_ativo = "RA"
 
-                    elif event.key == pygame.K_RETURN:
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                         turma_valida = (
                             len(turma_texto) == 2
                             and turma_texto[0].isdigit()
@@ -229,7 +238,7 @@ def main():
                         estado_jogo = "MENU"
 
                     elif jogo_zerado:
-                        if event.key == pygame.K_RETURN:
+                        if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                             # Envia relatório ao concluir o nível
                             tempo_total = (pygame.time.get_ticks() - tempo_inicio_sessao) // 1000
                             enviar_sessao(
@@ -244,14 +253,22 @@ def main():
                                 f"Você completou todas as palavras. "
                                 f"Sua pontuação foi {pontuacao}."
                             )
-                            estado_jogo    = "MENU"
+                            estado_jogo = "LOGIN"
+
+                            nome_texto  = ""
+                            ra_texto    = ""
+                            turma_texto = ""
+                            turma_id    = ""
+
+                            campo_ativo = "RA"
+
                             jogo_zerado    = False
                             pontuacao      = 0
                             acertos_sessao = 0
                             erros_sessao   = 0
 
                     else:
-                        if indice_atual == len(palavra_alvo) and event.key == pygame.K_RETURN:
+                        if indice_atual == len(palavra_alvo) and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                             proxima, i, msg = novo_jogo()
                             erros_palavra        = 0
                             tempo_inicio_palavra = pygame.time.get_ticks()
@@ -370,7 +387,8 @@ def main():
                                          largura_btn, altura_btn,
                                          cor_atual, config.BRANCO_GIZ)
                 if hover and clicou:
-                    lista_atual          = LISTAS_PALAVRAS[chave_nivel].copy()
+                    lista_completa = LISTAS_PALAVRAS[chave_nivel].copy()
+                    lista_atual = random.sample(lista_completa, 5) # Contador para limitar a 5 palavras por nível
                     palavra_alvo, indice_atual, msg_erro = reiniciar_tudo()
                     jogo_zerado          = False
                     estado_jogo          = "JOGANDO"

@@ -1,6 +1,3 @@
-"""
-Classe que gerencia os níveis do jogo
-"""
 import pygame
 import random
 
@@ -188,7 +185,7 @@ class Nivel:
 
 
             
-    def desenhar(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total):
+    def desenhar(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total, palavras_atual, total_palavras):
         """Desenha todos os elementos do nível"""
         # Céu com degradê
         for y in range(ALTURA):
@@ -201,7 +198,7 @@ class Nivel:
         self.todas_sprites.draw(tela)
         
         # Desenhar HUD
-        self.desenhar_hud(tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total)
+        self.desenhar_hud(tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total, palavras_atual, total_palavras)
 
         if self.mostrar_bonus:
             texto_bonus = fonte_grande.render("SEQUÊNCIA PERFEITA +40!", True, (255, 215, 0))
@@ -209,7 +206,7 @@ class Nivel:
             tela.blit(texto_bonus, rect_bonus)
 
         
-    def desenhar_hud(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total):
+    def desenhar_hud(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total, palavras_atual, total_palavras):
         """Desenha a interface"""
         # Painel superior com fundo semi-transparente
         painel = pygame.Surface((LARGURA, 120))
@@ -238,12 +235,16 @@ class Nivel:
             
             x_letra += 50
         
-        # Contador
-        total = len(self.palavra_alvo)
-        coletadas = len(self.letras_coletadas)
-        cor_contador = VERDE_SUCESSO if coletadas == total else BRANCO
-        texto_contador = fonte_grande.render(f"{coletadas}/{total}", True, cor_contador)
-        rect_contador = texto_contador.get_rect(right=LARGURA - 20, top=20)
+        # Contador de PALAVRAS (novo)
+        cor_contador = VERDE_SUCESSO if palavras_atual == total_palavras else BRANCO
+
+        texto_contador = fonte_grande.render(
+            f"{palavras_atual}/{total_palavras}",
+            True,
+            cor_contador
+        )
+
+        rect_contador = texto_contador.get_rect(right=LARGURA - 20, top=10)
         tela.blit(texto_contador, rect_contador)
 
         # Pontuação da sessão
@@ -259,17 +260,25 @@ class Nivel:
         texto_acertos = fonte_pequena.render(f"Acertos: {self.acertos}", True, VERDE_SUCESSO)
         tela.blit(texto_acertos, (LARGURA - 250, 100))
 
+       
+        if not self.completado:
+            dica = fonte_pequena.render("Coletando as letras na ordem correta +40!", True, COR_LETRA)
+            tela.blit(dica, (20, ALTURA - 40))
 
-        
-        # Instruções
-        if coletadas == total:
-            texto_instrucao = fonte_pequena.render("Pressione ENTER para formar a palavra!", True, COR_LETRA)
-            rect_instrucao = texto_instrucao.get_rect(center=(LARGURA // 2, ALTURA - 30))
-            
-            # Fundo para a instrução
-            fundo_instrucao = pygame.Surface((rect_instrucao.width + 40, rect_instrucao.height + 20))
-            fundo_instrucao.fill(AZUL_ESCURO)
-            fundo_instrucao.set_alpha(200)
-            tela.blit(fundo_instrucao, (rect_instrucao.x - 20, rect_instrucao.y - 10))
-            
-            tela.blit(texto_instrucao, rect_instrucao)
+            texto_instrucao = fonte_pequena.render(
+                "<- -> Mover | Espaço pular",
+                True,
+                COR_LETRA
+            )
+
+        else:
+            # Após completar
+            texto_instrucao = fonte_pequena.render(
+                "Pressione ENTER para continuar",
+                True,
+                COR_LETRA
+            )
+
+        rect_instrucao = texto_instrucao.get_rect(center=(LARGURA // 2, ALTURA - 30))          
+
+        tela.blit(texto_instrucao, rect_instrucao)

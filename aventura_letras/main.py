@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 from relatorio import RelatorioAluno
 from config import (
     LARGURA, ALTURA, FPS,
@@ -18,24 +19,39 @@ from typing import Optional
 #  Grupo 3 → longas  (8+ letras)    → plataformas DIFÍCIL
 # ─────────────────────────────────────────────────────────────────────────────
 PALAVRAS_NIVEL = {
-    1: ["MALA", "PATO", "RIO", "SOL", "CEU",
-        "MORA", "CASA", "PELO", "VOZ", "LUZ"],
+    1: ["casa", "bola", "gato", "sapo", "pato", "mala", "mesa", "vaso", "livro", "dedo",
+    "dado", "faca", "folha", "linha", "peixe", "milho", "cana", "bota", "capa", "pano",
+    "cola", "sola", "vela", "rua", "lua", "rio", "tia", "pai", "mãe", "avo", "tio",
+    "bebê", "boneca", "carro", "moto", "roda", "porta", "janela", "sala", "cama",
+    "copo", "prato", "fogo", "gelo", "sol", "chuva", "estrela", "nuvem", "vento"],
 
-    2: ["CHUVA", "FLOR", "LIVRO", "PEDRA", "TERRA",
-        "AMIGO", "FESTA", "PORTA", "VERDE", "NOITE"],
-
-    3: ["BORBOLETA", "CHOCOLATE", "ELEFANTE", "FLORESTA", "MONTANHA",
-        "PRINCESA", "TARTARUGA", "UNIVERSO", "GIRASSOL", "BIBLIOTECA"],
+    2: ["escola", "aluno", "professora", "caderno", "atividade", "leitura", "escrita",
+    "história", "ciência", "natureza", "cidade", "bairro", "família", "amigo",
+    "amizade", "respeito", "cuidado", "alimento", "saúde", "higiene", "esporte",
+    "brincadeira", "parque", "jardim", "animal", "planta", "flor", "árvore",
+    "fruto", "água", "energia", "trabalho", "profissão", "mercado", "transporte",
+    "viagem", "estrada", "mapa", "cultura", "música", "arte", "pintura", "desenho",
+    "número", "cálculo", "soma", "subtração", "problema", "resposta"],
+    
+    3: ["aprendizagem", "conhecimento", "educação", "responsabilidade", "organização",
+    "planejamento", "disciplina", "colaboração", "respeito", "cidadania",
+    "diversidade", "sustentabilidade", "preservação", "ambiente", "tecnologia",
+    "comunicação", "informação", "pesquisa", "investigação", "experimento",
+    "observação", "análise", "interpretação", "argumento", "opinião", "narrativa",
+    "descrição", "explicação", "geografia", "matemática", "literatura",
+    "vocabulário", "ortografia", "parágrafo", "texto", "leitura", "escrita",
+    "revisão", "exercício", "problema", "solução", "raciocínio", "estratégia",
+    "autonomia", "criatividade", "curiosidade", "reflexão"]
 }
 
 DIFICULDADE_NIVEL = {1: FACIL, 2: MEDIO, 3: DIFICIL}
 
 NIVEIS_INFO = {
-    1: {"titulo": "NÍVEL 1", "subtitulo": "Palavras Curtas",
+    1: {"titulo": "NÍVEL FÁCIL", "subtitulo": "Palavras Curtas",
         "desc": "3 a 4 letras", "cor": (46, 204, 113)},
-    2: {"titulo": "NÍVEL 2", "subtitulo": "Palavras Médias",
+    2: {"titulo": "NÍVEL MÉDIO", "subtitulo": "Palavras Médias",
         "desc": "5 a 7 letras", "cor": (241, 196, 15)},
-    3: {"titulo": "NÍVEL 3", "subtitulo": "Palavras Longas",
+    3: {"titulo": "NÍVEL DIFÍCIL", "subtitulo": "Palavras Longas",
         "desc": "8+ letras",   "cor": (231, 76, 60)},
 }
 
@@ -109,7 +125,7 @@ class Jogo:
         self.nivel_grupo      = self.nivel_selecionado
         self.nivel_indice     = 0
         self.dificuldade      = DIFICULDADE_NIVEL[self.nivel_grupo]
-        self.palavras_jogadas = PALAVRAS_NIVEL[self.nivel_grupo]
+        self.palavras_jogadas = random.sample(PALAVRAS_NIVEL[self.nivel_grupo], 5)
         self.pontuacao_total  = 0
         self.erros_totais     = 0
         self.acertos_totais   = 0
@@ -316,10 +332,14 @@ class Jogo:
         elif self.estado == "jogando" and self.nivel is not None:
             self.nivel.desenhar(
                 self.tela,
-                self.fonte_pequena, self.fonte_media,
-                self.fonte_grande, self.pontuacao_total
+                self.fonte_pequena, 
+                self.fonte_media,
+                self.fonte_grande, 
+                self.pontuacao_total,
+                self.nivel_indice + 1,
+                len(self.palavras_jogadas)
             )
-
+           
         elif (
             self.estado == "formando"
             and self.tela_formacao is not None
@@ -426,7 +446,7 @@ class Jogo:
                 self.tela.blit(t, (x + card_w // 2 - t.get_width() // 2, y_card + 185))
 
         inst = self.fonte_pequena.render(
-            "◄ ► para navegar   |   ENTER para confirmar   |   BACKSPACE para voltar",
+            "<-  -> para navegar   |   ENTER para confirmar   |   BACKSPACE para voltar",
             True, (160, 160, 200))
         self.tela.blit(inst, (cx - inst.get_width() // 2, ALTURA - 60))
 

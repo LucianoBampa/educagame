@@ -7,8 +7,8 @@ streamlit-autorefresh
 requests
 pandas
 pygame
-pyttsx3
 pydantic
 python-dotenv
 pyinstaller
 plotly
+gTTS
