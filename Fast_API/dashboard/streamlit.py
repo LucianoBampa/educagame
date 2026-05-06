@@ -3,8 +3,10 @@ import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import unicodedata
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+
 
 st.set_page_config(
     page_title="EducaGames — Dashboard",
@@ -30,6 +32,16 @@ st.markdown("""
 
 API_URL = "http://127.0.0.1:8000/api/internal"
 st_autorefresh(interval=15000, key="refresh")
+
+#----------------- NORMALIZAR STRINGS ----------------
+def normalizar(texto):
+    if not isinstance(texto, str):
+        return ""
+    
+    texto = texto.lower()
+    texto = unicodedata.normalize('NFD', texto)
+    texto = ''.join(c for c in texto if unicodedata.category(c) != 'Mn')
+    return texto
 
 # ---------------- API STATUS ----------------
 
@@ -98,6 +110,7 @@ df = df.merge(
 )
 df.drop(columns=["aluno_id_ref", "turma_id_ref", "jogo_id_ref"], inplace=True, errors="ignore")
 
+df["aluno_nome_norm"] = df["aluno_nome"].fillna("").apply(normalizar)
 df["data_execucao"] = pd.to_datetime(df["data_execucao"], format="mixed", errors="coerce")
 df["tempo_segundos"] = pd.to_numeric(df["tempo_total"], errors="coerce").fillna(0)
 df["acertos"]  = pd.to_numeric(df["acertos"],  errors="coerce").fillna(0)
@@ -116,7 +129,7 @@ def segundos_para_mmss(s):
 df["tempo_fmt"] = df["tempo_segundos"].apply(segundos_para_mmss)
 
 # ---------------- FILTROS ----------------
-
+st.sidebar.image("logo.png", width=100)
 st.sidebar.title("🔍 Filtros")
 
 data_min = df["data_execucao"].min().date()
@@ -126,10 +139,26 @@ periodo = st.sidebar.date_input("Período", value=(data_min, data_max),
                                  min_value=data_min, max_value=data_max)
 
 ra_sel     = st.sidebar.text_input("RA do Aluno")
-anos_sel   = st.sidebar.multiselect("Ano Letivo", sorted(df["ano"].dropna().unique()))
-turma_sel  = st.sidebar.multiselect("Turma", sorted(df["turma"].dropna().unique()))
-jogos_sel  = st.sidebar.multiselect("Jogo", sorted(df["jogo_nome"].dropna().unique()))
-dif_sel    = st.sidebar.multiselect("Dificuldade", sorted(df["dificuldade"].dropna().unique()))
+nome_sel = st.sidebar.text_input("Nome do aluno")
+anos_sel   = st.sidebar.multiselect(
+    "Ano Letivo", 
+    sorted(df["ano"].dropna().unique()),
+    placeholder="Selecione um ou mais anos"
+    )
+turma_sel  = st.sidebar.multiselect(
+    "Turma",
+    sorted(df["turma"].dropna().unique()),
+    placeholder="Selecione uma ou mais turmas")
+jogos_sel  = st.sidebar.multiselect(
+    "Jogo", 
+    sorted(df["jogo_nome"].dropna().unique()),
+    placeholder="Selecione um ou mais jogos"
+    )
+dif_sel    = st.sidebar.multiselect(
+    "Dificuldade", 
+    sorted(df["dificuldade"].dropna().unique()),
+    placeholder="Selecione uma ou mais dificuldades"
+    )
 
 df_f = df.copy()
 
@@ -138,6 +167,9 @@ if isinstance(periodo, tuple) and len(periodo) == 2:
                 (df_f["data_execucao"].dt.date <= periodo[1])]
 if ra_sel:
     df_f = df_f[df_f["ra"].str.contains(ra_sel, case=False, na=False)]
+if nome_sel:
+    nome_busca = normalizar(nome_sel)
+    df_f = df_f[df_f["aluno_nome_norm"].str.contains(nome_busca, na=False)]
 if anos_sel:
     df_f = df_f[df_f["ano"].isin(anos_sel)]
 if turma_sel:
@@ -146,6 +178,21 @@ if jogos_sel:
     df_f = df_f[df_f["jogo_nome"].isin(jogos_sel)]
 if dif_sel:
     df_f = df_f[df_f["dificuldade"].isin(dif_sel)]
+
+if nome_sel:
+    resultado = df_f[["aluno_nome", "ra"]].drop_duplicates()
+
+    if not resultado.empty:
+        st.sidebar.markdown("### 🔎 Resultado da busca")
+        st.sidebar.dataframe(
+            resultado.rename(columns={
+                "aluno_nome": "Nome",
+                "ra": "RA"
+            }),
+            use_container_width=True
+        )
+    else:
+        st.sidebar.warning("Nenhum aluno encontrado")
 
 # ---------------- DOWNLOAD ----------------
 
