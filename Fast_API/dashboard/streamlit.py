@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 
 st.set_page_config(
     page_title="EducaGames — Dashboard",
-    page_icon="🎓",
+    page_icon="educagame.ico",
     layout="wide",
     initial_sidebar_state="expanded"
 )
